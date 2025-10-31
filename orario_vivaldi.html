@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orario Docenti e Classi - Vivaldi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 12px 30px;
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            background: #e9ecef;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .search-box {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            max-width: 500px;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .teacher-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .teacher-info.active {
+            display: block;
+        }
+
+        .teacher-name {
+        font-size: 1.8em;
+        color: #667eea;
+        margin-bottom: 10px;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(102, 126, 234, 0.3);
+        border-bottom: 3px solid #764ba2;
+        padding-bottom: 8px;
+        }
+
+        .teacher-classes {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow-x: auto;
+            display: none;
+        }
+
+        .schedule-table.active {
+            display: table;
+        }
+
+        .schedule-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .schedule-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .schedule-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .schedule-table tr:hover {
+        background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+        transform: scale(1.01);
+        transition: all 0.3s;
+        }
+
+        .hour-label {
+            font-weight: 600;
+            background: #e9ecef;
+        }
+
+        .class-cell {
+        font-weight: 500;
+        color: #333;
+        background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+        border-radius: 8px;
+        padding: 12px 10px !important;
+        box-shadow: 0 2px 8px rgba(142, 197, 252, 0.3);
+        transition: all 0.3s;
+        }
+        
+        .class-cell:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(142, 197, 252, 0.5);
+        background: linear-gradient(135deg, #d4b5f7 0%, #7ab8f5 100%);
+        }
+
+        .empty-cell {
+        background: linear-gradient(135deg, #f8d4f0 0%, #e4d4f4 100%) !important;
+        border-radius: 8px;
+        opacity: 0.5;
+        }
+
+        .error-message {
+            text-align: center;
+            color: #dc3545;
+            padding: 20px;
+            display: none;
+            background: #ffe6e6;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .suggestions {
+            max-width: 500px;
+            margin: 10px auto;
+            text-align: left;
+        }
+
+        .suggestion-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .tab-button {
+                padding: 10px 20px;
+            }
+
+            .schedule-table {
+                font-size: 0.85em;
+            }
+
+            .schedule-table th,
+            .schedule-table td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Orario - Istituto Vivaldi</h1>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('teacher', this)">Cerca Docente</button>
+            <button class="tab-button" onclick="switchTab('class', this)">Cerca Classe</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Inserisci il cognome del docente..." autocomplete="off">
+            <div class="suggestions" id="suggestions"></div>
+        </div>
+
+        <div class="teacher-info" id="teacherInfo">
+            <div class="teacher-name" id="teacherName"></div>
+            <div class="teacher-classes" id="teacherClasses"></div>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            Nessun docente trovato con questo cognome. Riprova.
+        </div>
+
+        <table class="schedule-table" id="scheduleTable">
+            <thead>
+                <tr>
+                    <th>Ora</th>
+                    <th>LUNEDÌ</th>
+                    <th>MARTEDÌ</th>
+                    <th>MERCOLEDÌ</th>
+                    <th>GIOVEDÌ</th>
+                    <th>VENERDÌ</th>
+                </tr>
+            </thead>
+            <tbody id="scheduleBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const data = [{"Column1":"DOCENTE","Column2":"CLASSI","LUNEDI'":1,"Column5":2,"Column6":3,"Column7":4,"Column8":5,"Column9":6,"MARTEDI'":1,"Column12":2,"Column13":3,"Column14":4,"Column15":5,"Column16":6,"MERCOLEDI'":1,"Column19":2,"Column20":3,"Column21":4,"Column22":5,"Column23":6,"GIOVEDI'":1,"Column26":2,"Column27":3,"Column28":4,"Column29":5,"Column30":6,"VENERDI'":1,"Column33":2,"Column34":3,"Column35":4,"Column36":5,"Column37":6},{"Column1":"LETTERE"},{"Column1":"ARGENTIERI ANGELA","Column2":"1E 3M - 1D","Column5":"3M","Column6":"3M","Column8":"1E","Column9":"1E","Column14":"3M","Column15":"3M","Column16":"3M","Column20":"1D ALT","Column21":"1E","Column22":"1E","Column23":"1E","Column26":"3M","Column27":"3M","Column29":"1E","Column30":"1E","Column33":"1E","Column34":"1E","Column36":"3M","Column37":"3M"},{"Column1":"BIANCHI DANIELE","Column2":"3O + APPR sez(C\/H) 2O 3O 3P","Column6":"2H","Column8":"3O","Column9":"3O","MARTEDI'":"2C","Column12":"3O","Column13":"3C","Column15":"3P","Column16":"3O","MERCOLEDI'":"3O","Column19":"3O","Column27":"2O","Column28":"3O","Column29":"3O","Column30":"1C","VENERDI'":"3O","Column33":"3O","Column35":"3H","Column36":"1H"},{"Column1":"BORRELLI M FRANCESCA","Column2":"2E 3E","Column6":"3E","Column7":"3E","Column8":"2E","Column9":"2E","MARTEDI'":"2E","Column13":"2E","Column14":"2E","Column15":"3E","Column16":"3E","Column20":"2E","Column21":"3E","Column23":"3E","Column29":"3E","Column30":"2E","VENERDI'":"3E","Column34":"2E","Column35":"3E","Column36":"2E"},{"Column1":"CARUANA GIUSEPPINA","Column2":"2D 3D  1F ALT","Column6":"3D","Column7":"3D","Column8":"2D","Column9":"2D","Column12":"3D","Column13":"2D","Column15":"2D","Column16":"3D","MERCOLEDI'":"3D","Column19":"2D","Column20":"2D","GIOVEDI'":"3D","Column26":"3D","Column27":"2D","Column29":"1F ALT","Column30":"2D","Column35":"2D","Column36":"3D","Column37":"3D"},{"Column1":"CEVRAIN SERENELLA","Column2":"2C 3C - 3C ALT","LUNEDI'":"3C","Column5":"3C","Column6":"2C","Column12":"3C","Column13":"2C","Column14":"2C","Column16":"3C","Column20":"3C","Column21":"3C ALT","Column22":"2C","Column23":"2C","GIOVEDI'":"2C","Column26":"2C","Column27":"3C","Column28":"3C","Column30":"2C","Column34":"2C","Column36":"3C","Column37":"3C"},{"Column1":"CRISTADORO SARA","Column2":"1B 1C - 3B ALTR","Column6":"1B","Column7":"1B","Column8":"1C","MARTEDI'":"1C","Column12":"1C","Column13":"1B","Column19":"1B","Column20":"1C","Column21":"1C","Column22":"1B","GIOVEDI'":"1B","Column26":"1B","Column27":"3B ALT","Column28":"1C","Column29":"1C","Column34":"1C","Column35":"1C","Column36":"1B","Column37":"1B"},{"Column1":"DEGANI PAOLA","Column2":"2F + APPR sez (A\/B\/F) 3F ALT -1C","Column8":"2F","Column9":"2F","Column12":"3B","Column13":"3F ALT","Column14":"2F","Column15":"2F","Column16":"1F","Column19":"2F","Column20":"2F","Column21":"1B","Column22":"1C ALT","Column23":"3A","GIOVEDI'":"2B","Column27":"2F","Column28":"2F","Column29":"1A","Column30":"2A","VENERDI'":"2F","Column33":"2F","Column34":"3F"},{"Column1":"FIABANE ALESSIA","Column2":"1D + APPR sez(D\/E\/G)","LUNEDI'":"1D","Column5":"1D","Column6":"2D","MARTEDI'":"1D","Column12":"1D","Column14":"1G","Column19":"3G","Column20":"3D","Column22":"1D","Column23":"1D","GIOVEDI'":"1D","Column26":"1D","Column27":"3E","Column29":"2E","Column30":"2G","Column35":"1E","Column36":"1D","Column37":"1D"},{"Column1":"GUITTI GIUSY","Column2":"1H 2O","LUNEDI'":"1H","Column5":"1H","Column6":"1H","MARTEDI'":"2O","Column12":"2O","Column14":"1H","Column15":"1H","MERCOLEDI'":"2O","Column19":"2O","Column20":"2O","Column22":"1H","Column23":"1H","GIOVEDI'":"1H","Column26":"1H","Column28":"2O","Column29":"2O","Column36":"2O","Column37":"2O"},{"Column1":"MERCADANTE LUISA","Column2":"1A 3A","Column7":"3A","Column8":"3A","Column9":"1A","MARTEDI'":"3A","Column12":"1A","Column13":"1A","MERCOLEDI'":"1A","Column19":"1A","Column20":"3A","Column21":"3A","Column26":"1A","Column28":"3A","Column29":"3A","Column30":"1A","VENERDI'":"3A","Column35":"1A","Column36":"1A","Column37":"3A"},{"Column1":"OCCHIODORO FABIANA","Column2":"3F 1G","Column7":"3F","Column8":"1G","Column9":"1G","Column14":"3F","Column15":"3F","MERCOLEDI'":"1G","Column19":"1G","Column21":"3F","Column22":"3F","Column23":"1G","Column26":"1G","Column28":"3F","Column29":"1G","Column30":"3F","Column33":"1G","Column34":"1G","Column36":"3F","Column37":"3F"},{"Column1":"PORFIDO FRANCESCA","Column2":"2G 3G - 1A ALT","Column7":"3G","Column8":"2G","Column9":"3G","Column13":"3G","Column14":"2G","Column15":"2G","Column16":"2G","MERCOLEDI'":"2G","Column20":"3G","Column21":"3G","Column22":"3G","Column23":"2G","GIOVEDI'":"3G","Column26":"2G","Column27":"3G","Column28":"1A ALT","VENERDI'":"2G","Column33":"2G","Column34":"3G"},{"Column1":"QUAGLIA EMANUELA","Column2":"2B 3B","LUNEDI'":"2B","Column5":"2B","Column6":"3B","Column13":"3B","Column15":"2B","Column16":"3B","MERCOLEDI'":"3B","Column19":"3B","Column20":"2B","Column23":"2B","Column27":"2B","Column28":"3B","Column29":"3B","Column30":"2B","VENERDI'":"2B","Column33":"2B","Column34":"3B","Column35":"3B"},{"Column1":"RUELLO FEDERICA","Column2":"2A 3Q-2A - 2A ALT","LUNEDI'":"2A","Column5":"2A","Column6":"2A ALT","Column8":"3Q","Column9":"3Q","MARTEDI'":"3Q","Column12":"3Q","Column14":"2A","Column15":"2A","MERCOLEDI'":"3Q","Column19":"3Q","Column20":"3Q","GIOVEDI'":"2A","Column27":"2A","Column28":"2A","VENERDI'":"2A","Column33":"2A","Column35":"3Q","Column36":"3Q"},{"Column1":"VINCI FRANCESCA","Column2":"1F 3P","LUNEDI'":"1F","Column5":"1F","Column6":"3P","Column7":"3P","Column13":"3P","Column14":"1F","Column16":"3P","MERCOLEDI'":"1F","Column19":"1F","Column20":"3P","Column21":"3P","GIOVEDI'":"1F","Column26":"1F","Column27":"3P","VENERDI'":"3P","Column33":"3P","Column36":"1F","Column37":"1F"},{"Column1":"MATEMATICA"},{"Column1":"CORALLINI SERENA","Column2":"sez(D) 2E","LUNEDI'":"2E","Column5":"2D","Column6":"1D","Column8":"3D","Column9":"3D","MARTEDI'":"3D","Column12":"2D","Column13":"1D","Column16":"2E","MERCOLEDI'":"1D","Column19":"2E","Column21":"3D","Column22":"2D","Column23":"2D","GIOVEDI'":"2D","Column26":"2E","Column27":"2E","Column29":"3D","Column30":"1D","VENERDI'":"3D","Column34":"1D","Column35":"1D","Column36":"2D","Column37":"2E"},{"Column1":"ESPOSITO VITO","Column2":"sez(B)","LUNEDI'":"1B","Column5":"1B","Column7":"3B","Column8":"2B","Column9":"2B","MARTEDI'":"2B","Column12":"2B","Column14":"1B","MERCOLEDI'":"1B","Column20":"1B","Column21":"3B","GIOVEDI'":"3B","Column26":"3B","Column27":"1B","Column28":"2B","VENERDI'":"3B","Column33":"3B","Column34":"2B"},{"Column1":"MARCHETTI LAURA","Column2":"1E 1F 3E","LUNEDI'":"1E","Column5":"1E","MARTEDI'":"1F","Column12":"1F","Column15":"1E","Column16":"1E","Column19":"3E","Column20":"3E","Column22":"1F","Column23":"1F","GIOVEDI'":"3E","Column26":"3E","Column27":"1E","Column28":"1E","Column34":"1F","Column35":"1F","Column36":"3E","Column37":"3E"},{"Column1":"NAZZARO CAROLINA","Column2":"sez(G)","LUNEDI'":"3G","Column5":"3G","Column6":"2G","Column7":"2G","Column13":"2G","Column14":"3G","Column15":"1G","Column16":"1G","MERCOLEDI'":"3G","Column19":"2G","GIOVEDI'":"2G","Column26":"3G","Column27":"1G","Column28":"1G","VENERDI'":"1G","Column33":"3G","Column36":"1G","Column37":"2G"},{"Column1":"REMOLI CRISTINA","Column2":"2F 3Q 3P","LUNEDI'":"3P","Column5":"3P","Column6":"2F","Column7":"2F","MARTEDI'":"3P","Column13":"3Q","Column14":"3Q","Column21":"2F","Column22":"3P","Column23":"3P","Column27":"3Q","Column28":"3Q","Column30":"2F","VENERDI'":"3Q","Column33":"3Q","Column35":"3P","Column36":"2F","Column37":"2F"},{"Column1":"SPAGNUOLO ARIANNA","Column2":"sez(C)","Column7":"2C","Column8":"3C","Column9":"1C","MARTEDI'":"3C","Column12":"2C","Column14":"1C","Column15":"1C","MERCOLEDI'":"1C","Column19":"3C","Column20":"2C","GIOVEDI'":"1C","Column26":"3C","Column28":"2C","VENERDI'":"3C","Column33":"3C","Column35":"2C","Column36":"2C","Column37":"1C"},{"Column1":"TANTIMONACO MIRKO","Column2":"3F 2O 3O","Column6":"3O","Column8":"3F","Column9":"3F","MARTEDI'":"3O","Column12":"3F","Column13":"2O","Column14":"2O","Column19":"3F","Column20":"3O","Column22":"3O","Column23":"2O","Column29":"3F","Column30":"2O","VENERDI'":"3F","Column33":"2O","Column34":"2O","Column36":"3O","Column37":"3O"},{"Column1":"ZAMPETTI SIMONA","Column2":"sez(A)","LUNEDI'":"1A","Column7":"2A","Column8":"2A","MARTEDI'":"2A","Column12":"3A","MERCOLEDI'":"3A","Column20":"2A","Column21":"2A","Column22":"1A","Column23":"1A","GIOVEDI'":"3A","Column26":"3A","Column27":"1A","Column29":"2A","VENERDI'":"1A","Column33":"1A","Column34":"3A","Column35":"3A"},{"Column1":"INGLESE"},{"Column1":"BALBONI ELISABETTA","Column2":"sez(E\/F) 1E ALT -","Column7":"1E","Column9":"1F","MARTEDI'":"3E","Column12":"3E","Column13":"2F","Column14":"1E ALT","Column20":"1F","Column21":"2E","Column22":"2E","Column23":"3F","GIOVEDI'":"1E","Column26":"3F","Column27":"3F","Column28":"1F","Column30":"3E","VENERDI'":"1E","Column33":"2E","Column34":"2F","Column35":"2F"},{"Column1":"CORBUCCI LETIZIA","Column2":"sez(A\/B)  2B ALT","LUNEDI'":"3B","Column5":"1A","Column6":"3A","Column7":"ALT","MARTEDI'":"3B","Column14":"1A","Column15":"1B","Column16":"2B","Column21":"2B","Column22":"3A","Column23":"2A","Column26":"2A","Column28":"1B","Column29":"2B","Column30":"3A","Column34":"1B","Column35":"2A","Column36":"3B","Column37":"1A"},{"Column1":"DE MARCO ELISABETTA","Column2":"sez(D\/G)","Column5":"1G","Column6":"3G","Column7":"2D","Column9":"2G","Column12":"2G","Column13":"1G","Column14":"3D","Column16":"1D","Column21":"2G","Column23":"3D","Column27":"1D","Column28":"1D","Column29":"2D","Column30":"3G","Column33":"2D","Column34":"3D","Column35":"3G","Column37":"1G"},{"Column1":"GIALLUCA ANNA","Column2":"sez(C) 2O 3P","LUNEDI'":"1C","Column5":"1C","Column6":"2O","Column8":"3P","Column9":"2C","Column15":"2O","Column16":"1C","MERCOLEDI'":"3C","Column19":"2C","Column21":"2O","GIOVEDI'":"3P","Column26":"3P","VENERDI'":"2C","Column34":"3C","Column35":"3C"},{"Column1":"SINCERI CARLOTTA","Column2":"sez(I) 3O 1M","LUNEDI'":"3O","Column5":"3O","Column7":"1M","Column15":"2I","Column16":"3I","MERCOLEDI'":"1I","Column19":"1I","GIOVEDI'":"2I","Column26":"2I","Column27":"3I","Column28":"3I","Column30":"3O","VENERDI'":"1M","Column33":"1M","Column35":"1I"},{"Column1":"II LINGUA"},{"Column1":"DI CATALDO DORIANA","Column2":"sez(H\/N) 2O 3O 3Q","Column6":"3Q","Column7":"3N","Column9":"2O","Column12":"2H","Column13":"1H","Column14":"2N","Column16":"3H","MERCOLEDI'":"1N","Column19":"2N","Column20":"1H","Column21":"3H","Column23":"3O","GIOVEDI'":"3O","Column26":"2O","Column34":"3Q","Column35":"2H","Column36":"3N","Column37":"1N"},{"Column1":"GARCIA GARCIA MARIA","Column2":"sez(D\/E\/F)","Column8":"1F","Column9":"3E","MARTEDI'":"1E","Column12":"2E","Column13":"3D","Column14":"2D","MERCOLEDI'":"2D","Column19":"1D","Column21":"1F","Column22":"3D","Column23":"2F","GIOVEDI'":"3F","Column26":"2F","Column28":"2E","Column29":"1D","Column34":"3E","Column35":"3F","Column37":"1E"},{"Column1":"MUSCIANESE AUSILIA","Column2":"sez(A\/B)","MARTEDI'":"1B","Column12":"2A","Column13":"3A","Column14":"3B","Column16":"1A","Column22":"2A","Column23":"1B","GIOVEDI'":"1A","Column26":"2B","Column35":"2B","Column36":"3A","Column37":"3B"},{"Column1":"SALINAS M. VALERIA","Column2":"sez(C\/G) 3P","Column6":"1C","Column7":"3C","Column8":"3G","Column9":"3P","MERCOLEDI'":"2C","Column20":"2G","Column21":"1G","Column22":"3C","Column23":"1C","GIOVEDI'":"1G","Column27":"2G","VENERDI'":"3G","Column33":"2C","Column34":"3P"},{"Column1":"ARTE"},{"Column1":"GATTULLO CARLO","Column2":"sez(A\/F) 2O 3O 3P","LUNEDI'":"2F","Column5":"3A","Column7":"3O","Column8":"1A","Column9":"2A","Column12":"3P","Column13":"1F","Column14":"3O","Column15":"1A","MERCOLEDI'":"3P","Column19":"3A","Column20":"3F","Column22":"2O","Column29":"2F","Column30":"1F","Column33":"3F","Column35":"2O","Column36":"2A"},{"Column1":"RICCARDI SIMONA","Column2":"sez(B\/E\/G) 1D 2D","LUNEDI'":"3E","Column5":"3E","Column6":"2E","Column7":"2E","MARTEDI'":"1G","Column12":"1G","Column13":"2B","Column14":"2B","MERCOLEDI'":"1E","Column19":"1E","Column22":"3B","Column23":"3B","Column29":"1B","Column30":"1B","Column34":"2G","Column35":"2G","Column36":"3G","Column37":"3G"},{"Column1":"SGARAMELLA FLAVIA","Column2":"sez(C\/M\/N) 3D","LUNEDI'":"1N","Column5":"1M","Column6":"1M","Column8":"2M","Column9":"2M","Column12":"2N","Column13":"2N","Column15":"2C","Column16":"2C","Column19":"3N","Column20":"3N","Column22":"3M","Column23":"3M","GIOVEDI'":"1N","Column27":"3D","Column28":"3D","Column29":"3C","Column30":"3C","VENERDI'":"1C","Column33":"1C"},{"Column1":"VENTRE FRANCESCA","Column2":"1D 2D","Column15":"1D","Column16":"2D","VENERDI'":"2D","Column33":"1D"},{"Column1":"TECNOLOGIA"},{"Column1":"CUGLIANDRO ADA","Column2":"sez(A\/F) 2O 3O 3P","LUNEDI'":"3F","Column5":"3F","Column7":"2O","Column8":"2O","MARTEDI'":"2F","Column12":"2F","Column14":"3A","Column15":"3A","MERCOLEDI'":"2A","Column19":"2A","Column20":"1A","Column21":"1A","Column28":"3P","Column29":"3P","VENERDI'":"1F","Column33":"1F","Column34":"3O","Column35":"3O"},{"Column1":"DIAMENTE GIOVANNA","Column2":"sez(D\/E\/G) 3E ALT -1G ALT","LUNEDI'":"1G","Column5":"2E","Column6":"1E","Column8":"3E ALT","MARTEDI'":"2D","Column12":"1E","Column13":"3E","Column15":"3G","MERCOLEDI'":"3E","Column19":"3D","Column20":"1G","Column21":"1D","Column22":"1G ALT","Column28":"2G","Column29":"3G","Column30":"3D","VENERDI'":"1D","Column35":"2E","Column36":"2G","Column37":"2D"},{"Column1":"LUONGO DANIELA","Column2":"sez(B\/L\/N) 1H 2H","LUNEDI'":"2N","Column5":"2N","Column8":"3B","Column9":"3B","Column13":"2L","Column14":"2L","Column15":"2H","Column16":"2H","MERCOLEDI'":"2B","Column19":"2B","Column21":"3N","Column22":"3N","GIOVEDI'":"1L","Column26":"1L","Column27":"1H","Column29":"1N","Column30":"1N","VENERDI'":"1B","Column33":"1B","Column35":"3L","Column36":"3L","Column37":"1H"},{"Column1":"ZOCCOLANTE MARCO","Column2":"sez(C\/I\/M) 3Q","LUNEDI'":"3M","Column5":"1I","Column7":"1C","Column8":"2C","Column9":"3C","Column15":"1I","Column16":"1M","MERCOLEDI'":"2I","Column21":"3M","Column22":"3Q","Column23":"3I","GIOVEDI'":"3C","Column26":"1C","Column27":"2C","Column29":"2M","Column30":"3Q","VENERDI'":"2I","Column33":"2M","Column34":"1M","Column35":"3I"},{"Column1":"MUSICA"},{"Column1":"TURCHETTA","Column2":"3D 3P","LUNEDI'":"3D","Column5":"3D","Column36":"3P","Column37":"3P"},{"Column1":"GRECO ISABELLA","Column2":"sez(A\/B) 3Q 1M 2M","LUNEDI'":"3A","Column5":"3B","Column6":"2B","MARTEDI'":"1A","Column12":"1B","Column13":"2A","Column15":"3B","Column16":"3A","Column21":"2M","Column22":"1M","Column23":"3Q","Column28":"2M","Column29":"3Q","Column30":"1M","Column34":"1A","Column35":"1B","Column36":"2B","Column37":"2A"},{"Column1":"MORICCA ROSARIO","Column2":"2O 3O","Column15":"3O","Column16":"2O","GIOVEDI'":"2O","Column26":"3O"},{"Column1":"PERRI ALESSANDRO","Column2":"sez(C\/E\/G) 2C ALT - 2D ALT","LUNEDI'":"2C","Column5":"2CALT","Column6":"3C","MARTEDI'":"2G","Column12":"3G","Column14":"3C","Column15":"2E","MERCOLEDI'":"2E","Column19":"1C","Column20":"1E","Column22":"3E","Column23":"3G","Column26":"2D ALT","Column27":"1C","Column28":"3E","Column29":"2G","Column30":"1G","Column35":"1G","Column36":"1E","Column37":"2C"},{"Column1":"TASSETTI ROBERTA","Column2":"sez(F\/H) 1D 2D 3M","LUNEDI'":"2D","Column5":"2F","Column6":"3F","Column7":"1D","Column9":"2H","Column12":"3M","Column14":"1D","Column15":"1F","Column16":"3F","MERCOLEDI'":"3M","Column19":"1H","Column20":"3H","GIOVEDI'":"2F","Column27":"1F","Column28":"2D","VENERDI'":"2H","Column33":"1H","Column34":"3H"},{"Column1":"MOTORIA"},{"Column1":"GIULIANI LORELLA","Column2":"sez(D\/E\/F)","Column6":"1F","Column7":"1F","Column8":"1D","Column9":"1D","MARTEDI'":"3F","Column13":"1E","Column14":"3E","Column15":"3D","Column16":"2F","MERCOLEDI'":"3F","Column21":"2D","Column22":"2F","GIOVEDI'":"2E","Column26":"1E","VENERDI'":"2E","Column33":"3E","Column34":"2D","Column35":"3D"},{"Column1":"LOMBARDI SILVIA","Column2":"sez(L\/M) 3N 1G 2G -3P ALT","LUNEDI'":"2G","Column5":"2G","Column6":"1G","Column7":"1G","Column9":"3N","Column12":"3L","Column13":"3M","Column14":"3N","Column16":"1L","Column19":"3PALT","Column21":"1M","Column22":"3L","Column23":"2L","Column28":"1L","Column29":"1M","Column30":"2M","VENERDI'":"3M","Column33":"2L","Column34":"2M"},{"Column1":"MELILLO VALENTINA","Column2":"sez(A\/B\/C)","Column6":"1A","Column7":"1A","Column8":"1B","Column9":"1B","Column13":"1C","Column15":"3C","Column16":"2A","Column20":"3B","Column21":"2C","Column22":"2B","Column23":"3C","Column27":"3A","Column29":"2C","Column30":"3B","Column33":"3A","Column34":"2A","Column36":"1C","Column37":"2B"},{"Column1":"TORRICELLA MICHAELA","Column2":"20 30 3P 3G","LUNEDI'":"2O","Column5":"2O","MARTEDI'":"3G","Column13":"3O","Column14":"3P","Column27":"3O","Column28":"3G","Column30":"3P"},{"Column1":"RELIGIONE"},{"Column1":"NINCHI LILIANA","Column2":"3C 3P 2F 1G","MERCOLEDI'":"2F","Column19":"3P","Column21":"3C","Column22":"1G"},{"Column1":"DURANTE FRANCESCO","Column2":"sez(A\/B\/D\/E) 1C 2C 1F 3F 2O 3O","Column5":"2C","Column6":"2A","Column7":"2B","Column8":"3E","Column9":"3A","Column13":"3F","Column14":"1E","Column16":"1B","Column20":"1D","Column21":"3O","Column22":"1C","Column23":"2E","Column26":"2D","Column27":"3B","Column28":"1A","Column29":"1F","VENERDI'":"2O","Column33":"3D"},{"Column1":"FIORE ANNARITA","Column2":"sez(H\/I\/L\/M\/N) 2G 3G 3Q","Column7":"3Q","Column8":"3I","Column9":"1H","MARTEDI'":"2H","Column12":"1M","Column13":"3H","Column14":"1L","Column16":"3G","MERCOLEDI'":"2N","Column19":"2I","Column20":"2M","Column22":"2G","GIOVEDI'":"3M","Column26":"1I","Column28":"3L","Column29":"2L","VENERDI'":"3N","Column33":"1N"},{"Column1":"BARBATO SIMONA","Column2":"2G ALT","Column22":"2G ALT"}];
+
+        const teachers = data.filter(row => row.Column1 && row.Column1 !== 'DOCENTE' && !['LETTERE', 'MATEMATICA', 'INGLESE', 'II LINGUA', 'ARTE', 'TECNOLOGIA', 'MUSICA', 'MOTORIA', 'RELIGIONE'].includes(row.Column1));
+
+        let currentMode = 'teacher';
+        let allClasses = new Set();
+
+        // Estrai tutte le classi uniche
+        teachers.forEach(teacher => {
+            Object.keys(teacher).forEach(key => {
+                const value = teacher[key];
+                if (value && typeof value === 'string' && value.match(/^[123][A-Z]/) && !value.includes('sez')) {
+                    const className = value.replace(/\s*(ALT|ALTR).*/, '').trim();
+                    if (className.length <= 3) {
+                        allClasses.add(className);
+                    }
+                }
+            });
+        });
+
+        allClasses = Array.from(allClasses).sort();
+
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsDiv = document.getElementById('suggestions');
+        const teacherInfo = document.getElementById('teacherInfo');
+        const teacherName = document.getElementById('teacherName');
+        const teacherClasses = document.getElementById('teacherClasses');
+        const scheduleTable = document.getElementById('scheduleTable');
+        const scheduleBody = document.getElementById('scheduleBody');
+        const errorMessage = document.getElementById('errorMessage');
+
+        const days = ['LUNEDI\'', 'MARTEDI\'', 'MERCOLEDI\'', 'GIOVEDI\'', 'VENERDI\''];
+        const hourColumns = {
+            'LUNEDI\'': ['LUNEDI\'', 'Column5', 'Column6', 'Column7', 'Column8', 'Column9'],
+            'MARTEDI\'': ['MARTEDI\'', 'Column12', 'Column13', 'Column14', 'Column15', 'Column16'],
+            'MERCOLEDI\'': ['MERCOLEDI\'', 'Column19', 'Column20', 'Column21', 'Column22', 'Column23'],
+            'GIOVEDI\'': ['GIOVEDI\'', 'Column26', 'Column27', 'Column28', 'Column29', 'Column30'],
+            'VENERDI\'': ['VENERDI\'', 'Column33', 'Column34', 'Column35', 'Column36', 'Column37']
+        };
+
+        function switchTab(mode, clickedButton) {
+            currentMode = mode;
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+            
+            searchInput.value = '';
+            suggestionsDiv.innerHTML = '';
+            hideAll();
+            
+            if (mode === 'teacher') {
+                searchInput.placeholder = 'Inserisci il cognome del docente...';
+            } else {
+                searchInput.placeholder = 'Inserisci la classe (es. 1A, 2B, 3C)...';
+            }
+        }
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim().toUpperCase();
+            suggestionsDiv.innerHTML = '';
+            
+            if (searchTerm.length === 0) {
+                hideAll();
+                return;
+            }
+
+            if (currentMode === 'teacher') {
+                searchTeacher(searchTerm);
+            } else {
+                searchClass(searchTerm);
+            }
+        });
+
+        function searchTeacher(searchTerm) {
+            const matches = teachers.filter(t => 
+                t.Column1.toUpperCase().includes(searchTerm)
+            );
+
+            if (matches.length > 0 && matches.length <= 10) {
+                matches.forEach(teacher => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.textContent = teacher.Column1;
+                    div.onclick = () => {
+                        searchInput.value = teacher.Column1.split(' ').pop();
+                        displayTeacherSchedule(teacher);
+                        suggestionsDiv.innerHTML = '';
+                    };
+                    suggestionsDiv.appendChild(div);
+                });
+            }
+
+            if (matches.length === 1) {
+                displayTeacherSchedule(matches[0]);
+            }
+        }
+
+        function searchClass(searchTerm) {
+            const matches = allClasses.filter(c => 
+                c.toUpperCase().includes(searchTerm)
+            );
+
+            if (matches.length > 0 && matches.length <= 10) {
+                matches.forEach(className => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.textContent = className;
+                    div.onclick = () => {
+                        searchInput.value = className;
+                        displayClassSchedule(className);
+                        suggestionsDiv.innerHTML = '';
+                    };
+                    suggestionsDiv.appendChild(div);
+                });
+            }
+
+            if (matches.length === 1) {
+                displayClassSchedule(matches[0]);
+            } else if (matches.length === 0 && searchTerm.length >= 2) {
+                const exactMatch = allClasses.find(c => c.toUpperCase() === searchTerm);
+                if (exactMatch) {
+                    displayClassSchedule(exactMatch);
+                }
+            }
+        }
+
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.trim().toUpperCase();
+                
+                if (currentMode === 'teacher') {
+                    const teacher = teachers.find(t => 
+                        t.Column1.toUpperCase().includes(searchTerm)
+                    );
+                    
+                    if (teacher) {
+                        displayTeacherSchedule(teacher);
+                        suggestionsDiv.innerHTML = '';
+                    } else {
+                        hideAll();
+                        errorMessage.classList.add('active');
+                        errorMessage.textContent = 'Nessun docente trovato con questo cognome. Riprova.';
+                    }
+                } else {
+                    const className = allClasses.find(c => c.toUpperCase() === searchTerm);
+                    
+                    if (className) {
+                        displayClassSchedule(className);
+                        suggestionsDiv.innerHTML = '';
+                    } else {
+                        hideAll();
+                        errorMessage.classList.add('active');
+                        errorMessage.textContent = 'Nessuna classe trovata con questo nome. Riprova.';
+                    }
+                }
+            }
+        });
+
+        function displayTeacherSchedule(teacher) {
+            teacherName.textContent = teacher.Column1;
+            teacherClasses.textContent = 'Classi: ' + (teacher.Column2 || 'N/A');
+            
+            scheduleBody.innerHTML = '';
+            
+            for (let hour = 1; hour <= 6; hour++) {
+                const row = document.createElement('tr');
+                const hourCell = document.createElement('td');
+                hourCell.className = 'hour-label';
+                hourCell.textContent = hour + '° ora';
+                row.appendChild(hourCell);
+
+                days.forEach(day => {
+                    const cell = document.createElement('td');
+                    const columnName = hourColumns[day][hour - 1];
+                    const classValue = teacher[columnName];
+                    
+                    if (classValue) {
+                        cell.className = 'class-cell';
+                        cell.textContent = classValue;
+                    } else {
+                        cell.className = 'empty-cell';
+                        cell.textContent = '';
+                    }
+                    
+                    row.appendChild(cell);
+                });
+
+                scheduleBody.appendChild(row);
+            }
+
+            teacherInfo.classList.add('active');
+            scheduleTable.classList.add('active');
+            errorMessage.classList.remove('active');
+        }
+
+        function displayClassSchedule(className) {
+            teacherName.textContent = 'Classe ' + className;
+            teacherClasses.textContent = 'Orario settimanale completo';
+            
+            scheduleBody.innerHTML = '';
+            
+            for (let hour = 1; hour <= 6; hour++) {
+                const row = document.createElement('tr');
+                const hourCell = document.createElement('td');
+                hourCell.className = 'hour-label';
+                hourCell.textContent = hour + '° ora';
+                row.appendChild(hourCell);
+
+                days.forEach(day => {
+                    const cell = document.createElement('td');
+                    const columnName = hourColumns[day][hour - 1];
+                    
+                    let foundTeacher = null;
+                    let subject = '';
+                    
+                    for (let teacher of teachers) {
+                        const cellValue = teacher[columnName];
+                        if (cellValue && typeof cellValue === 'string') {
+                            const cleanValue = cellValue.replace(/\s*(ALT|ALTR).*/, '').trim();
+                            if (cleanValue === className || cellValue.includes(className + ' ') || 
+                                cellValue.startsWith(className) || cellValue === className) {
+                                foundTeacher = teacher.Column1;
+                                subject = getSubject(teacher.Column1);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (foundTeacher) {
+                    cell.className = 'class-cell';
+                    const nameParts = foundTeacher.split(' ');
+                    const teacherLastName = nameParts[0];
+                    cell.innerHTML = `<strong>${subject}</strong><br><small>${teacherLastName}</small>`;
+                    } else {
+                        cell.className = 'empty-cell';
+                        cell.textContent = '-';
+                    }
+                    
+                    row.appendChild(cell);
+                });
+
+                scheduleBody.appendChild(row);
+            }
+
+            teacherInfo.classList.add('active');
+            scheduleTable.classList.add('active');
+            errorMessage.classList.remove('active');
+        }
+
+        function getSubject(teacherName) {
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].Column1 === teacherName) {
+                    for (let j = i - 1; j >= 0; j--) {
+                        if (data[j].Column1 && !data[j].Column2 && data[j].Column1 !== 'DOCENTE') {
+                            return data[j].Column1;
+                        }
+                    }
+                }
+            }
+            return 'Materia';
+        }
+
+        function hideAll() {
+            teacherInfo.classList.remove('active');
+            scheduleTable.classList.remove('active');
+            errorMessage.classList.remove('active');
+        }
+    </script>
+</body>
+</html>
